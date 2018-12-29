@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>influxDB时序数据库</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" th:href="@{css/bootstrap.min.css}" />
+
+</head>
+<body>
+<div class="container">
+    <div class="row col-md-12">
+        <div id="main" class="row col-md-9">
+            <!--<div style="float: left;">
+                <h3 id="h1"></h3>
+                <div id="main1" style="width: 600px;height:400px;"></div>
+            </div>-->
+        </div>
+        <!--<div class="col-md-2">
+            <div class="row">
+                <div class="col-md-12" style="margin-top: 10px">
+                    <div class="row">
+                        <label>插入influxDB数据库数据</label>
+                    </div>
+                    <div class="row">
+                        <div th:if="${info != null}" class="alert alert-danger" role="alert" th:text="${info}"></div>
+                    </div>
+                    <div class="row">
+                        <form role="form" id="form_id" action="/influxDBCtl/addData" method="post">
+                            <div class="form-group">
+                                <label for="MonitorValue">MonitorValue</label>
+                                <input type="text" class="form-control" name="MonitorValue" id="MonitorValue" placeholder="MonitorValue">
+                            </div>
+                            <div class="form-group">
+                                <label for="SensorCode">SensorCode</label>
+                                <input type="text" class="form-control" name="SensorCode" id="SensorCode" placeholder="SensorCode">
+                            </div>
+                            <div class="form-group">
+                                <label for="ID">ID</label>
+                                <input type="text" class="form-control" name="ID" id="ID" placeholder="ID">
+                            </div>
+                            <div class="form-group">
+                                <label for="TS">TS</label>
+                                <input type="text" class="form-control" name="TS" id="TS" placeholder="TS">
+                            </div>
+                            <button type="submit" class="btn btn-default">提交</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+        <div class="col-md-3">
+            <div class="row">
+                <div class="col-md-12" style="margin-top: 10px">
+                    <div class="row">
+                        <label>kafka</label>
+                    </div>
+                    <div class="row">
+                        <div th:if="${info != null}" class="alert alert-danger" role="alert" th:text="${info}"></div>
+                    </div>
+                    <div class="row">
+                        <form role="form" id="form_id2">
+                            <div class="form-group">
+                                <label for="EQ_CODE">EQ_CODE</label>
+                                <input type="text" class="form-control" name="EqCode" id="EQ_CODE" placeholder="EQ_CODE">
+                            </div>
+                            <div class="form-group">
+                                <label for="SENSOR_CODE">SENSOR_CODE</label>
+                                <input type="text" class="form-control" name="SensorCode" id="SENSOR_CODE" placeholder="SENSOR_CODE">
+                            </div>
+                            <div class="form-group">
+                                <label for="CODE">CODE</label>
+                                <input type="text" class="form-control" name="Code" id="CODE" placeholder="CODE">
+                            </div>
+                            <div class="form-group">
+                                <label for="DATA_UNIT">DATA_UNIT</label>
+                                <input type="text" class="form-control" name="DataUnit" id="DATA_UNIT" placeholder="DATA_UNIT">
+                            </div>
+                            <div class="form-group">
+                                <label for="WARN_VALUE">WARN_VALUE</label>
+                                <input type="text" class="form-control" name="WARN_VALUE" id="WARN_VALUE" placeholder="WARN_VALUE">
+                            </div>
+                            <div class="form-group">
+                                <label for="MONITOR_VALUE">MONITOR_VALUE</label>
+                                <input type="text" class="form-control" name="MONITOR_VALUE" id="MONITOR_VALUE" placeholder="MONITOR_VALUE">
+                            </div>
+                            <div class="form-group">
+                                <label for="TS">TS</label>
+                                <input type="text" class="form-control" name="TS" id="TS" placeholder="TS">
+                            </div>
+                            <div class="form-group">
+                                <button type="button" onclick="getSubmit()" class="btn btn-default">提交</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{js/jquery.min.js}"></script>
+<script th:src="@{js/sockjs.min.js}"></script>
+<script th:src="@{js/stomp.js}"></script>
+<!-- 包括所有已编译的插件 -->
+<script th:src="@{js/bootstrap.min.js}"></script>
+<script type="text/javascript" th:src="@{js/echarts.js}"></script>
+
+<script type="text/javascript">
+    // 指定图表的配置项和数据
+    var option = {
+        title: {
+            text: 'Topic'
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            data: ['检测值']
+        },
+        
+        dataZoom: {
+            show: false,
+            start: 0,
+            end: 100
+        },
+        xAxis: [{
+            type: 'category',
+            boundaryGap: false,
+            data: []
+        }],
+        yAxis: [{
+            type: 'value',
+            scale: true,
+            name: '检测值',
+            //max:1000,
+            min: 0,
+            boundaryGap: [0.2, 0.2]
+        }],
+        series: [{
+            name: '检测值',
+            type: 'line',
+            smooth:true,
+            // itemStyle areaStyle 成为面积图的关键。
+            itemStyle: {normal: {
+                color:'#0099ff',
+                areaStyle: {type: 'default'},
+                lineStyle:{color:'#0099ff'}
+            }},
+            areaStyle: {// 实现蓝白渐变色
+                normal: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                        offset: 0,
+                        color: 'rgb(0, 153, 255)'
+                    }, {
+                        offset: 1,
+                        color: 'rgb(255,255,255)'
+                    }])
+                }
+            },
+            data:[]
+        }]
+    };
+
+    var sock;
+    var stomp;
+    window.iarr = [];
+    window.charts = [];
+    $(document).ready(function () {
+        $("#row_id").hide();
+        // 基于准备好的dom，初始化echarts实例
+        // myChart = echarts.init(document.getElementById('main'));
+        //websocket配置 连接url为endpointChat的endpoint,对应后台WebSoccketConfig的配置
+        sock = new SockJS("/endpointChat");
+        //使用STOMP子协议的websocket客户端
+        stomp = Stomp.over(sock);
+        websocket();
+    });
+    function websocket() {
+        stomp.connect({},function (frame) {
+            //接收服务端发送给/topic/greetings的订阅消息
+            stomp.subscribe('/queue/hello',function (message) {
+                var mess = JSON.parse(message.body);
+                for (var i=0;i<mess.length;i++){
+                    if(mess[i] != null){
+                        var b = "false";
+                        var si = mess[i].SensorCode.substring(6,7);
+                        if (iarr.length != 0){
+                            for(var k=0;k<iarr.length;k++){
+                                if (iarr[k]==si){
+                                    b = "true";
+                                    break;
+                                } else{
+                                    b = "false";
+                                }
+                            }
+                        }
+                        if (b=="true"){
+                            var m = "main"+si;
+                            //var myChart = echarts.init(document.getElementById(m));
+                            for (var c=0;c<charts.length;c++){
+                                if (charts[c].key == si){
+                                    var myChart = charts[c].value;
+                                    var data0 = option.series[0].data;
+                                    var data1 = option.xAxis[0].data;
+                                    data0.length=0;
+                                    data1.length=0;
+                                    for (var j=0;j<mess[i].valList.length;j++){
+                                        data0.push(mess[i].valList[j]);
+                                        data1.push(mess[i].timeList[j]);
+                                    }
+                                    myChart.setOption(option);
+                                }
+                            }
+                        } else if (b=="false") {
+                            iarr.push(si);
+                            var m = "main"+si;
+                            var h = "h"+si;
+                            var htmlStr = "<div style='float: left;'><h3 id='"+h+"'>"+mess[i].SensorCode+"</h3><div id='"+m+"' style='width: 600px;height: 400px;'></div></div>";
+                            $("#main").append(htmlStr);
+                            var myChart = echarts.init(document.getElementById(m));
+                            //myChart.key = si;
+                            charts.push({key:si,value:myChart});
+                            var data0 = option.series[0].data;
+                            var data1 = option.xAxis[0].data;
+                            data0.length=0;
+                            data1.length=0;
+                            for (var j=0;j<mess[i].valList.length;j++){
+                                data0.push(mess[i].valList[j]);
+                                data1.push(mess[i].timeList[j]);
+                            }
+                            myChart.setOption(option);
+                        }
+                    }
+                }
+            });
+        });
+    }
+    //向服务器发送消息
+    function sendHello() {
+        stomp.send("/hello", {}, "hello server");
+    }
+    //断开连接
+    function disconnect() {
+        if (stomp !== null) {
+            stomp.disconnect();
+        }
+    }
+    function getSubmit() {
+        if ($("#EQ_CODE").val()==""){
+            alert("EQ_CODE不能为空!");
+            return;
+        } else if ($("#SENSOR_CODE").val()==""){
+            alert("SENSOR_CODE不能为空!");
+            return;
+        } else if ($("#CODE").val()==""){
+            alert("CODE不能为空!");
+            return;
+        } else if ($("#DATA_UNIT").val()==""){
+            alert("DATA_UNIT不能为空!");
+            return;
+        } else if ($("#WARN_VALUE").val()==""){
+            alert("WARN_VALUE不能为空!");
+            return;
+        }else if ($("#MONITOR_VALUE").val()==""){
+            alert("MONITOR_VALUE不能为空!");
+            return;
+        } else if ($("#TS").val()==""){
+            alert("TS不能为空!");
+            return;
+        }else{
+            var message = {EQ_CODE:$("#EQ_CODE").val(),SENSOR_CODE:$("#SENSOR_CODE").val(),CODE:$("#CODE").val(),
+                DATA_UNIT:$("#DATA_UNIT").val(),WARN_VALUE:$("#WARN_VALUE").val(),MONITOR_VALUE:$("#MONITOR_VALUE").val(),TS:$("#TS").val()};
+            $.ajax({
+                type:"GET",
+                url:"/kafka/send",
+                data:{
+                    message:JSON.stringify(message)
+                },
+                dataType:"JSON",
+                success:function (data) {
+                    console.log(data);
+                }
+            });
+        }
+    }
+    
+</script>
+
+</body>
+</html>

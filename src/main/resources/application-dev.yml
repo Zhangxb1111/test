@@ -1,0 +1,54 @@
+
+jdbc:
+   type: mysql
+spring:
+   influx:
+      url: http://172.16.22.244:8086
+      #url: http://localhost:8086
+      #远程 dfgxadmin
+      username: admin
+      password: admin
+      database: dfgx-test
+      tableName: mon_influxdb_test
+      #tableName: b_test
+      #tableName: singleRecordTest
+      retention-policy: autogen
+      connect-timeout: 10
+      read-timeout: 30
+      write-timeout: 10
+      gzip: true
+      http: http://172.16.72.229:${server.port}/kafka/send
+   datasource:
+      username: root
+      password: root
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/platformcloud?useUnicode=true&characterEncoding=UTF-8&useSSL=false&zeroDateTimeBehavior=round&transformedBitIsBoolean=true&autoReconnect=true&failOverReadOnly=false&allowMultiQueries=true
+   thymeleaf:
+      prefix: classpath:/templates/
+      mode: LEGACYHTML5
+      cache: false
+   kafka:
+      bootstrap-servers: 172.16.22.236:9092,172.16.22.242:9092,172.16.22.244:9092
+      producer:
+         key-serializer: org.apache.kafka.common.serialization.StringSerializer
+         value-serializer: org.apache.kafka.common.serialization.StringSerializer
+         batch-size: 4096
+         buffer-memory: 40960
+         group-id: test
+      consumer:
+         enable-auto-commit: true
+         auto-commit-interval: 100
+         key-serializer: org.apache.kafka.common.serialization.StringDeserializer
+         value-serializer: org.apache.kafka.common.serialization.StringDeserializer
+         auto-offset-reset: earliest
+   task:
+      pool:
+         corePoolSize: 5
+         maxPoolSize: 5
+         keepAliveSeconds: 1
+         queueCapacity: 10000
+mybatis:
+   mapper-locations: classpath:mapper/**/*.xml
+   typeAliasesPackage: com.test.entity
+server:
+   port: 8088

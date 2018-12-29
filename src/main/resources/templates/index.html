@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>测试页面</title>
+    <link rel="stylesheet" th:href="@{css/bootstrap.min.css}"/>
+</head>
+<body>
+<div id="box">
+    <div id="eLine" style="width: 500px;height: 400px;float: left;"></div>
+    <div id="eBar" style="width: 500px;height: 400px;float: left;"></div>
+    <div id="ePie" style="width: 500px;height: 400px;float: left;"></div>
+</div>
+</body>
+<script th:src="@{js/jquery.min.js}"></script>
+<script th:src="@{js/sockjs.min.js}"></script>
+<script th:src="@{js/stomp.js}"></script>
+<!-- 包括所有已编译的插件 -->
+<script th:src="@{js/bootstrap.min.js}"></script>
+<script type="text/javascript" th:src="@{js/echarts.js}"></script>
+<script type="text/javascript">
+    //
+    // 基于准备好的dom，初始化echarts实例
+    var lineChart = echarts.init(document.getElementById('eLine'));
+    var barChart = echarts.init(document.getElementById('eBar'));
+    var pieChart = echarts.init(document.getElementById('ePie'));
+
+    // 指定图表的配置项和数据
+    var option = {
+        title: {
+            text: '折线图堆叠'
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            data: ['监测点一', '监测点二', '监测点三']
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: ['周一', '周二', '周三']
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [
+            {name: '监测点一', type: 'line', stack: '监测值', data: [120, 132, 101]},
+            {name: '监测点二', type: 'line', stack: '监测值', data: [220, 182, 191]},
+            {name: '监测点三', type: 'line', stack: '监测值', data: [150, 232, 201]}
+        ]
+    };
+
+    var optionBar = {
+        color: ['#003366', '#006699', '#4cabce'],//, '#e5323e'
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            }
+        },
+        legend: {
+            data: ['Point1', 'Point2', 'Point3']
+        },
+        calculable: true,
+        xAxis: [
+            {
+                type: 'category',
+                axisTick: {show: false},
+                data: ['2014', '2015', '2016']
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value'
+            }
+        ],
+        series: [
+            {name: 'Point1', type: 'bar', barGap: 0, data: [301, 334, 390]},
+            {name: 'Point2', type: 'bar', data: [191, 234, 290]},
+            {name: 'Point3', type: 'bar', data: [201, 154, 190]}
+            // {name: 'Point4', type: 'bar', data: [101, 99, 40]}
+        ]
+    };
+
+    var optionPie = {
+        title: {
+            text: '某站点用户访问来源',
+            subtext: '纯属虚构',
+            x: 'center'
+
+        },
+        tooltip : {
+            trigger: 'item',
+            formatter: "{a} <br/>{b} : {c} ({d}%)"
+        },
+        legend: {
+            top: 49,
+            data: ['8477900000', '8477900010', '8477900020']
+        },
+        series: [
+            {
+                name: '监测点平均值',
+                type: 'pie',
+                radius: '55%',
+                center: ['50%', '60%'],
+                data: [
+                    {value: 335, name: '8477900000'},
+                    {value: 310, name: '8477900010'},
+                    {value: 234, name: '8477900020'}
+                ],
+                itemStyle: {
+                    emphasis: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }
+        ]
+    };
+
+    // 使用刚指定的配置项和数据显示图表。
+    lineChart.setOption(option);
+    barChart.setOption(optionBar);
+    pieChart.setOption(optionPie);
+
+    var sock;
+    var stomp;
+    $(document).ready(function () {
+        //websocket配置 连接url为endpointChat的endpoint,对应后台WebSoccketConfig的配置
+        sock = new SockJS("/endpointChat");
+        //使用STOMP子协议的websocket客户端
+        stomp = Stomp.over(sock);
+        websocket();
+    });
+
+    function websocket() {
+        stomp.connect({},function (frame) {
+            //接收服务端发送给/topic/greetings的订阅消息
+            stomp.subscribe('/topic/hello',function (message) {
+                var allList = JSON.parse(message.body);
+                var mess = allList[0];
+                var pieList = allList[1];
+                var max = 0;
+                for(var m=0;m<3-1;m++){
+                    if ($.isEmptyObject(mess[m]) && $.isEmptyObject(mess[m+1])){
+
+                    }else {
+                        if (m==0){
+                            if (mess[m].time.length<mess[m+1].time.length){
+                                max = m+1;
+                            } else{
+                                max = m;
+                            }
+                        }else{
+                            if (mess[m].time.length>mess[max]){
+                                max=m;
+                            } else{
+                                max=max;
+                            }
+                        }
+                    }
+                }
+                var list = [];
+                var data0 = option.series[0].data;list.push(data0);
+                var data1 = option.series[1].data;list.push(data1);
+                var data2 = option.series[2].data;list.push(data2);
+                var xdata = option.xAxis.data;list.push(xdata);
+                var barData0 = optionBar.series[0].data;list.push(barData0);
+                var barData1 = optionBar.series[1].data;list.push(barData1);
+                var barData2 = optionBar.series[2].data;list.push(barData2);
+                var barxData = optionBar.xAxis[0].data;list.push(barxData);
+                var pieSeriesData = optionPie.series[0].data;list.push(pieSeriesData);
+                for(var obj=0;obj<list.length;obj++){
+                    list[obj].length=0;
+                }
+                if (mess.length != 0){
+                    for(var m=0;m<mess[max].time.length;m++){
+                        xdata.push(mess[max].time[m]);
+                        barxData.push(mess[max].time[m]);
+                    }
+                    for (var i=0;i<mess[0].data.length;i++){
+                        data0.push(mess[0].data[i]);
+                        barData0.push(mess[0].data[i])
+                    }
+                    for (var j=0;j<mess[1].data.length;j++){
+                        data1.push(mess[1].data[j]);
+                        barData1.push(mess[1].data[j])
+                    }
+                    for (var k=0;k<mess[2].data.length;k++){
+                        data2.push(mess[2].data[k]);
+                        barData2.push(mess[2].data[k])
+                    }
+                }
+                for(var v=0;v<pieList.length;v++){
+                    if (v<3) pieSeriesData.push(pieList[v]);
+                }
+                lineChart.setOption(option);
+                barChart.setOption(optionBar);
+                pieChart.setOption(optionPie);
+            });
+        });
+    }
+
+    $.ajax({
+        type: "post",
+        url: "",
+        async: true,
+        success: function (data) {
+            //console.log(data);
+        },
+        error: function (err) {
+            //console.log(err);
+        }
+    });
+</script>
+</html>
