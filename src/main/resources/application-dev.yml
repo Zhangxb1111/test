@@ -52,3 +52,9 @@ mybatis:
    typeAliasesPackage: com.test.entity
 server:
    port: 8088
+logging:
+  level:
+    com:
+      test:
+         configration:
+            dao: debug
