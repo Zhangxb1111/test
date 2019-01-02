@@ -1,4 +1,5 @@
-
+server:
+  port: 8088
 jdbc:
    type: mysql
 spring:
@@ -50,11 +51,9 @@ spring:
 mybatis:
    mapper-locations: classpath:mapper/**/*.xml
    typeAliasesPackage: com.test.entity
-server:
-   port: 8088
+#spring boot 自带日志 Jakarta Commons Logging API (JCL)
 logging:
+  file: platformcloud.log
   level:
     com:
-      test:
-         configration:
-            dao: debug
+      test: debug

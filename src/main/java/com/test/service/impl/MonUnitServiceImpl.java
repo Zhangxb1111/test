@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -46,6 +47,11 @@ public class MonUnitServiceImpl implements MonUnitServiceI {
             e.printStackTrace();
         }
         logger.info("end executeAsync");
+    }
+
+    @Override
+    public List<MonUnit> getList() {
+        return monUnitMapper.getList();
     }
 
 }

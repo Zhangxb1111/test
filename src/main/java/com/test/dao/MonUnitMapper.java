@@ -1,7 +1,10 @@
 package com.test.dao;
 
 import com.test.entity.MonUnit;
+import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public interface MonUnitMapper {
@@ -52,4 +55,7 @@ public interface MonUnitMapper {
      * @mbggenerated
      */
     int updateByPrimaryKey(MonUnit record);
+
+    @Select("select * from mon_unit")
+    List<MonUnit> getList();
 }
